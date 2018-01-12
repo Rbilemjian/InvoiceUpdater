@@ -1,19 +1,26 @@
 public class Student
 {
-    String last;
-    String first;
+    String name;
     int expected;
-    int[] payments;
-    public Student(String last, String first, int expected, int[] payments)
+    String[] payments;
+    public Student(String name, int expected, String[] payments)
     {
-        this.last = last;
-        this.first = first;
+        this.name = name;
         this.expected = expected;
         this.payments = payments;
     }
-    public void displayStudent()
+    public String toString()
     {
-        System.out.println(this.last+","+this.first);
+        String s = "";
+        s+="Name: "+name;
+        s+="\nExpected: "+expected;
+        s+="\nPayments: ";
+        for(int i = 0;i<payments.length;i++)
+        {
+            s+=payments[i]+"\t";
+        }
+        s+="\n";
+        return s;
     }
         
 }
