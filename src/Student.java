@@ -14,6 +14,7 @@ public class Student
         String s = "";
         s+="Name: "+name;
         s+="\nExpected: "+expected;
+        s+="\nMonths:   Jan\tFeb\tMar\tApr\tJun\tJul\tAug\tSep\tNov\tDec";
         s+="\nPayments: ";
         for(int i = 0;i<payments.length;i++)
         {

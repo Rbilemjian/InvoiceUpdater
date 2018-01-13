@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.Scanner;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.ArrayList;
 
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFRow;
@@ -14,6 +14,8 @@ import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.DataFormatter;
 
 import java.io.File;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import javax.swing.JFileChooser;
 
@@ -146,13 +148,7 @@ public class UpdaterGUI extends javax.swing.JFrame {
 
     private void UpdateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_UpdateActionPerformed
         HashMap <String,Student> students = getStudents(paymentTracking);
-        Iterator it = students.entrySet().iterator();
-        while(it.hasNext())
-        {
-            HashMap.Entry pair = (HashMap.Entry)it.next();
-            System.out.println(pair.getValue());
-            it.remove();
-        }
+        
         String date="";
         if(this.dateField.getText().equals(""))
         {
@@ -166,7 +162,7 @@ public class UpdaterGUI extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this,"You must browse for both files","Error",JOptionPane.ERROR_MESSAGE);
             return;
         }
-        //updateFiles(directoryFolder,date);
+        updateFiles(directoryFolder,date,students);
     }//GEN-LAST:event_UpdateActionPerformed
 
     private void directoryButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_directoryButtonActionPerformed
@@ -236,7 +232,7 @@ public class UpdaterGUI extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel paymentTrackingLabel;
     // End of variables declaration//GEN-END:variables
-    public static void updateFiles(File mainFolder, String date)
+    public static void updateFiles(File mainFolder, String date, HashMap<String,Student> students)
     {
         String month = getMonth(date);
         File folders[] = mainFolder.listFiles();
@@ -245,12 +241,14 @@ public class UpdaterGUI extends javax.swing.JFrame {
             File[] arr = folders[i].listFiles();
             for(int j = 0;j<arr.length;j++)
             {
-                System.out.println("Wrote to file " + arr[j]);
-                updateDates(arr[j],date,month);
+                System.out.println("Writing to file " + arr[j] + "...");
+                updateDate(arr[j],date,month);
+                int unpaid = getMonthsUnpaid(arr[j], students, date);
+                updatePrice(arr[j],unpaid);
             }
         }
     }
-    public static void updateDates(File file, String date, String month)
+    public static void updateDate(File file, String date, String month)
     {
         try
         {
@@ -276,9 +274,30 @@ public class UpdaterGUI extends javax.swing.JFrame {
             e.printStackTrace();
         }
     }
-    public static void updatePrices(File file, HSSFRow studentRow)
+    public static int getMonthsUnpaid(File file, HashMap<String,Student> students, String date)
     {
-        //TODO: Update prices on xml file in this method
+        String name = file.getName();
+        name = name.replace('_','&');
+        name = name.substring(0,name.length()-4);
+        Student student = students.get(name);
+        
+        //determining # of months unpaid
+        int month = Integer.parseInt(date.substring(0,1));
+        if(date.charAt(2) == '/')
+            month = Integer.parseInt(date.substring(0,2));
+        int monthsUnpaid = 0;
+        for(int i = month;i>=0;i--)
+        {
+            if(student.payments[i].equals(student.expected+""))
+            {
+                break;
+            }
+            if(student.payments[i].equals("N/A"))
+                break;
+            else if(student.payments[i].equals("LATE") || student.payments[i].equals("0"))
+                monthsUnpaid+=1;
+        }
+        return monthsUnpaid;
     }
     public static String getMonth(String date)
     {
@@ -319,15 +338,6 @@ public class UpdaterGUI extends javax.swing.JFrame {
     }
     public static HashMap<String,Student> getStudents(File paymentTracking)
     {
-//        ArrayList<ArrayList<Student>> students = new ArrayList<>();
-//        ArrayList<Student> pink = new ArrayList<>();
-//        ArrayList<Student> turquoise = new ArrayList<>();
-//        ArrayList<Student> royalBlue = new ArrayList<>();
-//        ArrayList<Student> blackAndWhite = new ArrayList<>();
-//        students.add(pink);
-//        students.add(turquoise);
-//        students.add(royalBlue);
-//        students.add(blackAndWhite);
         HashMap<String,Student> students = new HashMap<>();
         try
         {
@@ -352,7 +362,7 @@ public class UpdaterGUI extends javax.swing.JFrame {
                         else if(currCell.getCellType() == 1)
                             payments[j] = currCell.getStringCellValue();
                         else
-                        payments[j] = (int)currCell.getNumericCellValue()+"";
+                            payments[j] = (int)currCell.getNumericCellValue()+"";
                     }
                     Student s = new Student(name,expected,payments);
                     students.put(s.name, s);
@@ -371,5 +381,38 @@ public class UpdaterGUI extends javax.swing.JFrame {
             e.printStackTrace();
         }
         return students;
+    }
+    public static void updatePrice(File file, int monthsUnpaid)
+    {
+        try
+        {
+            if(monthsUnpaid == 0) //case that the student owes nothing
+            {
+                String newName = file.getAbsolutePath().substring(0,file.getAbsolutePath().length()-4) + " (Do not send).xls";
+                File newFile = new File(newName);
+            try {
+                newFile.createNewFile();
+            } catch (IOException ex) {
+                Logger.getLogger(UpdaterGUI.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            FileInputStream fsIP= new FileInputStream(file);
+            HSSFWorkbook wb = new HSSFWorkbook(fsIP);
+            FileOutputStream output_file =new FileOutputStream(newFile);
+            wb.write(output_file); 
+            output_file.close();
+            file.delete();
+            }
+            
+             
+            
+        }
+        catch(FileNotFoundException e)
+        {
+            e.printStackTrace();
+        }
+        catch(IOException e)
+        {
+            e.printStackTrace();
+        }
     }
 }
