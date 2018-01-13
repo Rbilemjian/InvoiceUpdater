@@ -4,6 +4,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Date;
 import java.util.Scanner;
+import java.util.HashMap;
+import java.util.Iterator;
 
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFRow;
@@ -26,6 +28,7 @@ import javax.swing.JFileChooser;
  */
 public class UpdaterGUI extends javax.swing.JFrame {
     File directoryFolder;
+    File paymentTracking;
     /**
      * Creates new form UpdaterGUI
      */
@@ -46,7 +49,9 @@ public class UpdaterGUI extends javax.swing.JFrame {
         jLabel1 = new javax.swing.JLabel();
         Update = new javax.swing.JButton();
         directoryButton = new javax.swing.JButton();
-        directoryLabel = new javax.swing.JLabel();
+        folderDirectoryLabel = new javax.swing.JLabel();
+        browseForPaymentTracking = new javax.swing.JButton();
+        paymentTrackingLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setResizable(false);
@@ -66,7 +71,7 @@ public class UpdaterGUI extends javax.swing.JFrame {
             }
         });
 
-        directoryButton.setText("Choose File");
+        directoryButton.setText("Browse for Invoices Folder");
         directoryButton.setAlignmentX(0.5F);
         directoryButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -74,49 +79,62 @@ public class UpdaterGUI extends javax.swing.JFrame {
             }
         });
 
-        directoryLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        directoryLabel.setText("No File Chosen");
+        folderDirectoryLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        folderDirectoryLabel.setText("No File Chosen");
+
+        browseForPaymentTracking.setText("Browse for Payment Tracking Excel File");
+        browseForPaymentTracking.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                browseForPaymentTrackingActionPerformed(evt);
+            }
+        });
+
+        paymentTrackingLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        paymentTrackingLabel.setText("No File Chosen");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(96, 96, 96)
-                .addComponent(directoryButton)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(18, 18, 18)
+                .addComponent(jLabel1)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(dateField)
+                .addGap(10, 10, 10))
+            .addComponent(paymentTrackingLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addGroup(layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(directoryLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addContainerGap()
-                                .addComponent(jLabel1)
-                                .addGap(18, 18, 18)
-                                .addComponent(dateField, javax.swing.GroupLayout.PREFERRED_SIZE, 169, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(layout.createSequentialGroup()
-                                .addGap(82, 82, 82)
-                                .addComponent(Update)))
-                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addGap(75, 75, 75)
+                .addComponent(browseForPaymentTracking, javax.swing.GroupLayout.PREFERRED_SIZE, 255, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(76, Short.MAX_VALUE))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(directoryButton, javax.swing.GroupLayout.PREFERRED_SIZE, 192, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(103, 103, 103))
+            .addComponent(folderDirectoryLabel, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(Update, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addGap(23, 23, 23)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(browseForPaymentTracking)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(paymentTrackingLabel)
+                .addGap(18, 18, 18)
                 .addComponent(directoryButton)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(directoryLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 20, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(folderDirectoryLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 20, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(dateField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel1))
                 .addGap(18, 18, 18)
                 .addComponent(Update)
-                .addContainerGap(20, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         pack();
@@ -127,17 +145,28 @@ public class UpdaterGUI extends javax.swing.JFrame {
     }//GEN-LAST:event_dateFieldActionPerformed
 
     private void UpdateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_UpdateActionPerformed
-        String date="";
-        try
+        HashMap <String,Student> students = getStudents(paymentTracking);
+        Iterator it = students.entrySet().iterator();
+        while(it.hasNext())
         {
-            date = this.dateField.getText();
+            HashMap.Entry pair = (HashMap.Entry)it.next();
+            System.out.println(pair.getValue());
+            it.remove();
         }
-        catch(Exception e)
+        String date="";
+        if(this.dateField.getText().equals(""))
         {
             JOptionPane.showMessageDialog(this,"You must enter a date","Error",JOptionPane.ERROR_MESSAGE);
             return;
         }
-        updateFiles(directoryFolder,date);
+        else
+            date = this.dateField.getText();
+        if(directoryFolder == null || paymentTracking == null)
+        {
+            JOptionPane.showMessageDialog(this,"You must browse for both files","Error",JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        //updateFiles(directoryFolder,date);
     }//GEN-LAST:event_UpdateActionPerformed
 
     private void directoryButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_directoryButtonActionPerformed
@@ -147,11 +176,21 @@ public class UpdaterGUI extends javax.swing.JFrame {
         if(chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION)
         {
             File selectedFile = chooser.getSelectedFile();
-            System.out.println(selectedFile);
             directoryFolder = selectedFile;
-            this.directoryLabel.setText("Selected Directory:"+selectedFile.getAbsolutePath());
+            this.folderDirectoryLabel.setText(selectedFile.getAbsolutePath());
         }
     }//GEN-LAST:event_directoryButtonActionPerformed
+
+    private void browseForPaymentTrackingActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_browseForPaymentTrackingActionPerformed
+        JFileChooser chooser = new JFileChooser();
+        chooser.setCurrentDirectory(new File("."));
+        if(chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION)
+        {
+            File selectedFile = chooser.getSelectedFile();
+            paymentTracking = selectedFile;
+            this.paymentTrackingLabel.setText(selectedFile.getAbsolutePath());
+        }
+    }//GEN-LAST:event_browseForPaymentTrackingActionPerformed
 
     /**
      * @param args the command line arguments
@@ -190,10 +229,12 @@ public class UpdaterGUI extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton Update;
+    private javax.swing.JButton browseForPaymentTracking;
     private javax.swing.JTextField dateField;
     private javax.swing.JButton directoryButton;
-    private javax.swing.JLabel directoryLabel;
+    private javax.swing.JLabel folderDirectoryLabel;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel paymentTrackingLabel;
     // End of variables declaration//GEN-END:variables
     public static void updateFiles(File mainFolder, String date)
     {
@@ -205,11 +246,11 @@ public class UpdaterGUI extends javax.swing.JFrame {
             for(int j = 0;j<arr.length;j++)
             {
                 System.out.println("Wrote to file " + arr[j]);
-                writeToFile(arr[j],date,month);
+                updateDates(arr[j],date,month);
             }
         }
     }
-    public static void writeToFile(File file, String date, String month)
+    public static void updateDates(File file, String date, String month)
     {
         try
         {
@@ -235,7 +276,11 @@ public class UpdaterGUI extends javax.swing.JFrame {
             e.printStackTrace();
         }
     }
-        public static String getMonth(String date)
+    public static void updatePrices(File file, HSSFRow studentRow)
+    {
+        //TODO: Update prices on xml file in this method
+    }
+    public static String getMonth(String date)
     {
         int month = Integer.parseInt(date.substring(0,1));
         if(date.charAt(2) == '/')
@@ -271,5 +316,60 @@ public class UpdaterGUI extends javax.swing.JFrame {
                      break;
         }
         return monthString;
+    }
+    public static HashMap<String,Student> getStudents(File paymentTracking)
+    {
+//        ArrayList<ArrayList<Student>> students = new ArrayList<>();
+//        ArrayList<Student> pink = new ArrayList<>();
+//        ArrayList<Student> turquoise = new ArrayList<>();
+//        ArrayList<Student> royalBlue = new ArrayList<>();
+//        ArrayList<Student> blackAndWhite = new ArrayList<>();
+//        students.add(pink);
+//        students.add(turquoise);
+//        students.add(royalBlue);
+//        students.add(blackAndWhite);
+        HashMap<String,Student> students = new HashMap<>();
+        try
+        {
+            FileInputStream fsIP= new FileInputStream(paymentTracking); 
+            HSSFWorkbook wb = new HSSFWorkbook(fsIP);
+            int numSheets = wb.getNumberOfSheets();
+            for(int i = 0;i<numSheets;i++)
+            {
+                HSSFSheet currSheet = wb.getSheetAt(i);
+                int k = 1;
+                HSSFRow currRow = currSheet.getRow(k);
+                while(!currRow.getCell(0).getStringCellValue().equals("Total")) //while loop to go through all the students in the sheet
+                {
+                    String name = currRow.getCell(0).getStringCellValue();
+                    int expected = (int) currRow.getCell(1).getNumericCellValue();
+                    String[] payments = new String[12];
+                    for(int j = 0;j<12;j++)
+                    {
+                        HSSFCell currCell = currRow.getCell(j+2);
+                        if(currCell == null)
+                            payments[j] = "0";
+                        else if(currCell.getCellType() == 1)
+                            payments[j] = currCell.getStringCellValue();
+                        else
+                        payments[j] = (int)currCell.getNumericCellValue()+"";
+                    }
+                    Student s = new Student(name,expected,payments);
+                    students.put(s.name, s);
+                    k++;
+                    currRow = currSheet.getRow(k);
+                }
+            }
+            fsIP.close();
+        }
+        catch(FileNotFoundException e)
+        {
+            e.printStackTrace();
+        }
+        catch(IOException e)
+        {
+            e.printStackTrace();
+        }
+        return students;
     }
 }
