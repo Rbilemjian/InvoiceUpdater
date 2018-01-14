@@ -12,6 +12,7 @@ import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.DataFormatter;
+import org.apache.poi.hssf.usermodel.HSSFFormulaEvaluator;
 
 import java.io.File;
 import java.util.logging.Level;
@@ -241,10 +242,12 @@ public class UpdaterGUI extends javax.swing.JFrame {
             File[] arr = folders[i].listFiles();
             for(int j = 0;j<arr.length;j++)
             {
-                System.out.println("Writing to file " + arr[j] + "...");
+                System.out.println("Writing to file " + arr[j].getName() + "...");
+                arr[j] = resetFileName(arr[j]);
                 updateDate(arr[j],date,month);
-                int unpaid = getMonthsUnpaid(arr[j], students, date);
-                updatePrice(arr[j],unpaid);
+                Student student = getStudent(arr[j],students);
+                int[] paymentInfo = getMonthsUnpaid(arr[j], student, date);
+                updatePrice(arr[j],paymentInfo, student, date);
             }
         }
     }
@@ -261,9 +264,9 @@ public class UpdaterGUI extends javax.swing.JFrame {
                 cell = worksheet.getRow(45).getCell(2);
                 cell.setCellValue("Payment is due within the first week of "+month);
                 fsIP.close();
-                FileOutputStream output_file =new FileOutputStream(file);
-                wb.write(output_file); 
-                output_file.close();   
+                FileOutputStream outputFile =new FileOutputStream(file);
+                wb.write(outputFile); 
+                outputFile.close();   
         }
         catch(FileNotFoundException e)
         {
@@ -274,36 +277,91 @@ public class UpdaterGUI extends javax.swing.JFrame {
             e.printStackTrace();
         }
     }
-    public static int getMonthsUnpaid(File file, HashMap<String,Student> students, String date)
+    public static Student getStudent(File file, HashMap<String,Student> students)
     {
-        String name = file.getName();
+        String name = file.getName().replace(" ","");
         name = name.replace('_','&');
         name = name.substring(0,name.length()-4);
-        Student student = students.get(name);
+        return students.get(name);
+    }
+    public static int[] getMonthsUnpaid(File file, Student student, String date)
+    {
         
         //determining # of months unpaid
+        int month = getIntegerMonth(date);
+        int monthsUnpaid = 0;
+        int credit = 0;
+        for(int i = month;i>=0;i--)
+        {
+            String payment = student.payments[i].replace(" ","");
+            if(payment.equals(student.expected+""))
+                break;
+            if(payment.equals("N/A"))
+                break;
+            else if(payment.contains("CR"))
+            {
+                monthsUnpaid+=1;
+                String intString = payment.substring(0,payment.indexOf('C'));
+                credit = Integer.parseInt(intString);
+                break;
+            }
+            else if(payment.equals("LATE") || payment.equals("0"))
+                monthsUnpaid+=1;
+        }
+        int[] arr = {monthsUnpaid,credit};
+        return arr;
+    }
+    public static int getIntegerMonth(String date)
+    {
         int month = Integer.parseInt(date.substring(0,1));
         if(date.charAt(2) == '/')
             month = Integer.parseInt(date.substring(0,2));
-        int monthsUnpaid = 0;
-        for(int i = month;i>=0;i--)
-        {
-            if(student.payments[i].equals(student.expected+""))
-            {
-                break;
-            }
-            if(student.payments[i].equals("N/A"))
-                break;
-            else if(student.payments[i].equals("LATE") || student.payments[i].equals("0"))
-                monthsUnpaid+=1;
-        }
-        return monthsUnpaid;
+        return month;
+    }
+    public static int getNextIntegerMonth(int month)
+    {
+        if(month == 12)
+            return 1;
+        else
+            return month++;
     }
     public static String getMonth(String date)
     {
-        int month = Integer.parseInt(date.substring(0,1));
-        if(date.charAt(2) == '/')
-            month = Integer.parseInt(date.substring(0,2));
+        int month = getIntegerMonth(date);
+        String monthString;
+        switch(month)
+        {
+            case 1:  monthString = "February";
+                     break;
+            case 2:  monthString = "March";
+                     break;
+            case 3:  monthString = "April";
+                     break;
+            case 4:  monthString = "May";
+                     break;
+            case 5:  monthString = "June";
+                     break;
+            case 6:  monthString = "July";
+                     break;
+            case 7:  monthString = "August";
+                     break;
+            case 8:  monthString = "September";
+                     break;
+            case 9:  monthString = "October";
+                     break;
+            case 10: monthString = "November";
+                     break;
+            case 11: monthString = "December";
+                     break;
+            case 12: monthString = "January";
+                     break;
+            default: monthString = "Invalid month";
+                     break;
+        }
+        return monthString;
+    }
+    public static String getMonth(int month)
+    {
         String monthString;
         switch(month)
         {
@@ -351,7 +409,7 @@ public class UpdaterGUI extends javax.swing.JFrame {
                 HSSFRow currRow = currSheet.getRow(k);
                 while(!currRow.getCell(0).getStringCellValue().equals("Total")) //while loop to go through all the students in the sheet
                 {
-                    String name = currRow.getCell(0).getStringCellValue();
+                    String name = currRow.getCell(0).getStringCellValue().replace(" ","");
                     int expected = (int) currRow.getCell(1).getNumericCellValue();
                     String[] payments = new String[12];
                     for(int j = 0;j<12;j++)
@@ -382,29 +440,80 @@ public class UpdaterGUI extends javax.swing.JFrame {
         }
         return students;
     }
-    public static void updatePrice(File file, int monthsUnpaid)
+    public static void updatePrice(File file, int[] paymentInfo, Student student, String date)
     {
+        int month = getNextIntegerMonth(getIntegerMonth(date));
+        int monthsUnpaid = paymentInfo[0];
+        int credit = paymentInfo[1];
         try
         {
             if(monthsUnpaid == 0) //case that the student owes nothing
             {
                 String newName = file.getAbsolutePath().substring(0,file.getAbsolutePath().length()-4) + " (Do not send).xls";
                 File newFile = new File(newName);
-            try {
-                newFile.createNewFile();
-            } catch (IOException ex) {
-                Logger.getLogger(UpdaterGUI.class.getName()).log(Level.SEVERE, null, ex);
+                try 
+                {
+                    newFile.createNewFile();
+                } 
+                catch (IOException ex) 
+                {
+                    Logger.getLogger(UpdaterGUI.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                FileInputStream fsIP= new FileInputStream(file);
+                HSSFWorkbook wb = new HSSFWorkbook(fsIP);
+                HSSFSheet worksheet = wb.getSheetAt(0);
+                HSSFRow currRow;
+                for(int i = 18;i<35;i++)
+                {
+                    currRow = worksheet.getRow(i);
+                    currRow.getCell(2).setCellValue("");
+                    currRow.getCell(3).setCellValue("");
+                    currRow.getCell(11).setCellValue("");
+                }
+                HSSFFormulaEvaluator.evaluateAllFormulaCells(wb);
+                FileOutputStream outputFile =new FileOutputStream(newFile);
+                wb.write(outputFile); 
+                outputFile.close();
+                file.delete();
             }
-            FileInputStream fsIP= new FileInputStream(file);
-            HSSFWorkbook wb = new HSSFWorkbook(fsIP);
-            FileOutputStream output_file =new FileOutputStream(newFile);
-            wb.write(output_file); 
-            output_file.close();
-            file.delete();
+            else
+            {
+                FileInputStream fsIP = new FileInputStream(file);
+                HSSFWorkbook wb = new HSSFWorkbook(fsIP);
+                HSSFSheet worksheet = wb.getSheetAt(0);
+                int index = 18;
+                HSSFRow currRow;
+                String strMonth;
+                for(int i = 18;i<35;i++)
+                {
+                    currRow = worksheet.getRow(i);
+                    currRow.getCell(2).setCellValue("");
+                    currRow.getCell(3).setCellValue("");
+                    currRow.getCell(11).setCellValue("");
+                }
+                for(int i = 0;i<monthsUnpaid;i++)
+                {
+                    currRow = worksheet.getRow(index);
+                    strMonth = getMonth(month);
+                    currRow.getCell(2).setCellValue(1);
+                    currRow.getCell(3).setCellValue("Monthly Tuition - "+strMonth);
+                    currRow.getCell(11).setCellValue(student.expected);
+                    index++;
+                    month--;
+                }
+                if(credit>0)
+                {
+                    currRow = worksheet.getRow(index);
+                    currRow.getCell(2).setCellValue(1);
+                    currRow.getCell(3).setCellValue("Credit - " + credit);
+                    currRow.getCell(11).setCellValue(-credit);
+                }
+                HSSFFormulaEvaluator.evaluateAllFormulaCells(wb);
+                fsIP.close();
+                FileOutputStream outputFile =new FileOutputStream(file);
+                wb.write(outputFile); 
+                outputFile.close();
             }
-            
-             
-            
         }
         catch(FileNotFoundException e)
         {
@@ -415,4 +524,39 @@ public class UpdaterGUI extends javax.swing.JFrame {
             e.printStackTrace();
         }
     }
+    public static File resetFileName(File file)
+    {
+        if(!file.getName().contains("(Do not send)"))
+            return file;
+        try
+        {
+            String newName = file.getAbsolutePath().substring(0,file.getAbsolutePath().length()-18) + ".xls";
+            File newFile = new File(newName);
+            try 
+            {
+                newFile.createNewFile();
+            } 
+            catch (IOException ex) 
+            {
+                Logger.getLogger(UpdaterGUI.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            FileInputStream fsIP= new FileInputStream(file);
+            HSSFWorkbook wb = new HSSFWorkbook(fsIP);
+            FileOutputStream outputFile =new FileOutputStream(newFile);
+            wb.write(outputFile); 
+            outputFile.close();
+            file.delete();
+            return newFile;
+        }
+        catch(FileNotFoundException e)
+        {
+            e.printStackTrace();
+        }
+        catch(IOException e)
+        {
+            e.printStackTrace();
+        }
+        return file;
+    }
+    
 }
