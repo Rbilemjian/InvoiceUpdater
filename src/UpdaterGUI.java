@@ -242,8 +242,8 @@ public class UpdaterGUI extends javax.swing.JFrame {
             File[] arr = folders[i].listFiles();
             for(int j = 0;j<arr.length;j++)
             {
-                System.out.println("Writing to file " + arr[j].getName() + "...");
                 arr[j] = resetFileName(arr[j]);
+                System.out.println("Writing to file " + arr[j].getName() + "...");
                 updateDate(arr[j],date,month);
                 Student student = getStudent(arr[j],students);
                 int[] paymentInfo = getMonthsUnpaid(arr[j], student, date);
