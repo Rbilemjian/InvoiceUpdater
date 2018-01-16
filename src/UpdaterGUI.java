@@ -294,9 +294,7 @@ public class UpdaterGUI extends javax.swing.JFrame {
         for(int i = month;i>=0;i--)
         {
             String payment = student.payments[i].replace(" ","");
-            if(payment.equals(student.expected+""))
-                break;
-            if(payment.equals("N/A"))
+            if(payment.equals(student.expected+"") || payment.equals("N/A") || payment.equals("PAID"))
                 break;
             else if(payment.contains("CR"))
             {
@@ -505,7 +503,7 @@ public class UpdaterGUI extends javax.swing.JFrame {
                 {
                     currRow = worksheet.getRow(index);
                     currRow.getCell(2).setCellValue(1);
-                    currRow.getCell(3).setCellValue("Credit - " + credit);
+                    currRow.getCell(3).setCellValue("$"+credit+" Credit");
                     currRow.getCell(11).setCellValue(-credit);
                 }
                 HSSFFormulaEvaluator.evaluateAllFormulaCells(wb);
@@ -526,11 +524,16 @@ public class UpdaterGUI extends javax.swing.JFrame {
     }
     public static File resetFileName(File file)
     {
-        if(!file.getName().contains("(Do not send)"))
+        
+        if(!(file.getName().contains("(Do not send)") || file.getName().contains("_")))
             return file;
         try
         {
-            String newName = file.getAbsolutePath().substring(0,file.getAbsolutePath().length()-18) + ".xls";
+            String newName = file.getAbsolutePath();
+            if(file.getName().contains("(Do not send)"))
+                newName = newName.substring(0,newName.length()-18) + ".xls";
+            
+            newName = newName.replace("_","&");
             File newFile = new File(newName);
             try 
             {
