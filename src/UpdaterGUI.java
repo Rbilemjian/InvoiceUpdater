@@ -2,7 +2,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Date;
 import java.util.Scanner;
 import java.util.HashMap;
 import java.util.ArrayList;
@@ -11,7 +10,6 @@ import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.hssf.usermodel.HSSFFormulaEvaluator;
 
 import java.io.File;
@@ -235,6 +233,7 @@ public class UpdaterGUI extends javax.swing.JFrame {
     // End of variables declaration//GEN-END:variables
     public static void updateFiles(File mainFolder, String date, HashMap<String,Student> students)
     {
+        ArrayList<String> problemStudents = new ArrayList<>();
         String month = getMonth(date);
         File folders[] = mainFolder.listFiles();
         for(int i = 0;i<folders.length;i++)
@@ -242,14 +241,37 @@ public class UpdaterGUI extends javax.swing.JFrame {
             File[] arr = folders[i].listFiles();
             for(int j = 0;j<arr.length;j++)
             {
+                Student student = getStudent(arr[j],students);
+                if(student == null)
+                {
+                    problemStudents.add(arr[j].getName().substring(0,arr[j].getName().length()-4)); //adding name of file to problem students list, not including .xls extension
+                    arr[j] = setNoticeFixFileName(arr[j]);
+                    continue;
+                }
                 arr[j] = resetFileName(arr[j]);
                 System.out.println("Writing to file " + arr[j].getName() + "...");
-                updateDate(arr[j],date,month);
-                Student student = getStudent(arr[j],students);
                 int[] paymentInfo = getMonthsUnpaid(arr[j], student, date);
                 updatePrice(arr[j],paymentInfo, student, date);
+                updateDate(arr[j],date,month);
             }
         }
+        String problemStudentPrintout = "Following student(s) could not be updated because of name mismatch:\n";
+        if(problemStudents.size()>0)
+        {
+            for(int i = 0;i<problemStudents.size();i++)
+            {
+                problemStudentPrintout+=problemStudents.get(i)+"\n";
+            }
+        }
+        else
+        {
+            problemStudentPrintout = "All student invoices updated successfully";
+        }
+        JOptionPane.showConfirmDialog(null,
+                problemStudentPrintout,
+                "Done running",
+                JOptionPane.DEFAULT_OPTION,
+                JOptionPane.PLAIN_MESSAGE);
     }
     public static void updateDate(File file, String date, String month)
     {
@@ -531,8 +553,42 @@ public class UpdaterGUI extends javax.swing.JFrame {
         {
             String newName = file.getAbsolutePath();
             if(file.getName().contains("(Do not send)"))
-                newName = newName.substring(0,newName.length()-18) + ".xls";
+                newName = newName.substring(0,newName.length()-18) + ".xls"; //removing (do not send)
             
+            newName = newName.replace("_","&");
+            File newFile = new File(newName);
+            try 
+            {
+                newFile.createNewFile();
+            } 
+            catch (IOException ex) 
+            {
+                Logger.getLogger(UpdaterGUI.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            FileInputStream fsIP= new FileInputStream(file);
+            HSSFWorkbook wb = new HSSFWorkbook(fsIP);
+            FileOutputStream outputFile =new FileOutputStream(newFile);
+            wb.write(outputFile); 
+            outputFile.close();
+            file.delete();
+            return newFile;
+        }
+        catch(FileNotFoundException e)
+        {
+            e.printStackTrace();
+        }
+        catch(IOException e)
+        {
+            e.printStackTrace();
+        }
+        return file;
+    }
+    public static File setNoticeFixFileName(File file)
+    {
+        try
+        {
+            String newName = file.getAbsolutePath();
+            newName = newName.substring(0,newName.length()-4) + "(Fix name mismatch).xls"; //removing (do not send)
             newName = newName.replace("_","&");
             File newFile = new File(newName);
             try 
