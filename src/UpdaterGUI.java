@@ -351,6 +351,7 @@ public class UpdaterGUI extends javax.swing.JFrame {
         String monthString;
         switch(month)
         {
+            
             case 1:  monthString = "February";
                      break;
             case 2:  monthString = "March";
@@ -385,6 +386,8 @@ public class UpdaterGUI extends javax.swing.JFrame {
         String monthString;
         switch(month)
         {
+            case 0:  monthString = "January";
+                     break;
             case 1:  monthString = "February";
                      break;
             case 2:  monthString = "March";
@@ -554,7 +557,6 @@ public class UpdaterGUI extends javax.swing.JFrame {
             String newName = file.getAbsolutePath();
             if(file.getName().contains("(Do not send)"))
                 newName = newName.substring(0,newName.length()-18) + ".xls"; //removing (do not send)
-            
             newName = newName.replace("_","&");
             File newFile = new File(newName);
             try 
