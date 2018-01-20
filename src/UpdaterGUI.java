@@ -234,25 +234,24 @@ public class UpdaterGUI extends javax.swing.JFrame {
     public static void updateFiles(File mainFolder, String date, HashMap<String,Student> students)
     {
         ArrayList<String> problemStudents = new ArrayList<>();
-        String month = getMonth(date);
+        String month = getDueMonth(date);
         File folders[] = mainFolder.listFiles();
         for(int i = 0;i<folders.length;i++)
         {
             File[] arr = folders[i].listFiles();
             for(int j = 0;j<arr.length;j++)
             {
+                arr[j] = resetFileName(arr[j]);
                 Student student = getStudent(arr[j],students);
                 if(student == null)
                 {
-                    problemStudents.add(arr[j].getName().substring(0,arr[j].getName().length()-4)); //adding name of file to problem students list, not including .xls extension
-                    arr[j] = setNoticeFixFileName(arr[j]);
+                    problemStudents.add(arr[j].getName().substring(0,arr[j].getName().length()-4)); //adding name of file to problem students list, not including .xls extension 
                     continue;
                 }
-                arr[j] = resetFileName(arr[j]);
                 System.out.println("Writing to file " + arr[j].getName() + "...");
                 int[] paymentInfo = getMonthsUnpaid(arr[j], student, date);
-                updatePrice(arr[j],paymentInfo, student, date);
                 updateDate(arr[j],date,month);
+                updatePrice(arr[j],paymentInfo, student, date);
             }
         }
         String problemStudentPrintout = "Following student(s) could not be updated because of name mismatch:\n";
@@ -306,11 +305,11 @@ public class UpdaterGUI extends javax.swing.JFrame {
         name = name.substring(0,name.length()-4);
         return students.get(name);
     }
-    public static int[] getMonthsUnpaid(File file, Student student, String date)
+    public static int[] getMonthsUnpaid(File file, Student student, String date) //determine # of months student has attended unpaid
     {
-        
-        //determining # of months unpaid
         int month = getIntegerMonth(date);
+        if(month == 12)
+            month = 11;
         int monthsUnpaid = 0;
         int credit = 0;
         for(int i = month;i>=0;i--)
@@ -343,9 +342,16 @@ public class UpdaterGUI extends javax.swing.JFrame {
         if(month == 12)
             return 1;
         else
-            return month++;
+            return month+1;
     }
-    public static String getMonth(String date)
+    public static int getPreviousIntegerMonth(int month)
+    {
+        if(month == 1)
+            return 12;
+        else
+            return month-1;
+    }
+    public static String getDueMonth(String date)
     {
         int month = getIntegerMonth(date);
         String monthString;
@@ -410,8 +416,6 @@ public class UpdaterGUI extends javax.swing.JFrame {
                      break;
             case 11: monthString = "December";
                      break;
-            case 12: monthString = "January";
-                     break;
             default: monthString = "Invalid month";
                      break;
         }
@@ -465,7 +469,11 @@ public class UpdaterGUI extends javax.swing.JFrame {
     }
     public static void updatePrice(File file, int[] paymentInfo, Student student, String date)
     {
-        int month = getNextIntegerMonth(getIntegerMonth(date));
+        int month = getIntegerMonth(date);
+        if(month == 12)
+        {
+            month = 11;
+        }
         int monthsUnpaid = paymentInfo[0];
         int credit = paymentInfo[1];
         try
@@ -486,7 +494,7 @@ public class UpdaterGUI extends javax.swing.JFrame {
                 HSSFWorkbook wb = new HSSFWorkbook(fsIP);
                 HSSFSheet worksheet = wb.getSheetAt(0);
                 HSSFRow currRow;
-                for(int i = 18;i<35;i++)
+                for(int i = 18;i<35;i++) //clearing out due payments section
                 {
                     currRow = worksheet.getRow(i);
                     currRow.getCell(2).setCellValue("");
@@ -499,7 +507,7 @@ public class UpdaterGUI extends javax.swing.JFrame {
                 outputFile.close();
                 file.delete();
             }
-            else
+            else //case that student owes at least 1 month's tuition
             {
                 FileInputStream fsIP = new FileInputStream(file);
                 HSSFWorkbook wb = new HSSFWorkbook(fsIP);
@@ -507,14 +515,14 @@ public class UpdaterGUI extends javax.swing.JFrame {
                 int index = 18;
                 HSSFRow currRow;
                 String strMonth;
-                for(int i = 18;i<35;i++)
+                for(int i = 18;i<35;i++) //clearing out due payments section
                 {
                     currRow = worksheet.getRow(i);
                     currRow.getCell(2).setCellValue("");
                     currRow.getCell(3).setCellValue("");
                     currRow.getCell(11).setCellValue("");
                 }
-                for(int i = 0;i<monthsUnpaid;i++)
+                for(int i = 0;i<monthsUnpaid;i++) //updating due payments in the excel file
                 {
                     currRow = worksheet.getRow(index);
                     strMonth = getMonth(month);
@@ -522,7 +530,7 @@ public class UpdaterGUI extends javax.swing.JFrame {
                     currRow.getCell(3).setCellValue("Monthly Tuition - "+strMonth);
                     currRow.getCell(11).setCellValue(student.expected);
                     index++;
-                    month--;
+                    month = month-1;
                 }
                 if(credit>0)
                 {
@@ -585,39 +593,4 @@ public class UpdaterGUI extends javax.swing.JFrame {
         }
         return file;
     }
-    public static File setNoticeFixFileName(File file)
-    {
-        try
-        {
-            String newName = file.getAbsolutePath();
-            newName = newName.substring(0,newName.length()-4) + "(Fix name mismatch).xls"; //removing (do not send)
-            newName = newName.replace("_","&");
-            File newFile = new File(newName);
-            try 
-            {
-                newFile.createNewFile();
-            } 
-            catch (IOException ex) 
-            {
-                Logger.getLogger(UpdaterGUI.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            FileInputStream fsIP= new FileInputStream(file);
-            HSSFWorkbook wb = new HSSFWorkbook(fsIP);
-            FileOutputStream outputFile =new FileOutputStream(newFile);
-            wb.write(outputFile); 
-            outputFile.close();
-            file.delete();
-            return newFile;
-        }
-        catch(FileNotFoundException e)
-        {
-            e.printStackTrace();
-        }
-        catch(IOException e)
-        {
-            e.printStackTrace();
-        }
-        return file;
-    }
-    
 }
