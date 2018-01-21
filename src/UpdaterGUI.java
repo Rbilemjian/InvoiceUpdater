@@ -17,6 +17,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import javax.swing.JFileChooser;
+import javax.swing.JTextArea;
+import javax.swing.SwingUtilities;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -53,6 +55,8 @@ public class UpdaterGUI extends javax.swing.JFrame {
         folderDirectoryLabel = new javax.swing.JLabel();
         browseForPaymentTracking = new javax.swing.JButton();
         paymentTrackingLabel = new javax.swing.JLabel();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        textArea = new javax.swing.JTextArea();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setResizable(false);
@@ -93,30 +97,42 @@ public class UpdaterGUI extends javax.swing.JFrame {
         paymentTrackingLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         paymentTrackingLabel.setText("No File Chosen");
 
+        textArea.setEditable(false);
+        textArea.setColumns(20);
+        textArea.setRows(5);
+        textArea.setText("Browse for proper files, enter the date,then click \"Update\nInvoices\" in order to begin.\n");
+        textArea.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+        jScrollPane1.setViewportView(textArea);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(paymentTrackingLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(folderDirectoryLabel, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(Update, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap())
             .addGroup(layout.createSequentialGroup()
                 .addGap(18, 18, 18)
                 .addComponent(jLabel1)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(dateField)
                 .addGap(10, 10, 10))
-            .addComponent(paymentTrackingLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .addGroup(layout.createSequentialGroup()
-                .addGap(75, 75, 75)
-                .addComponent(browseForPaymentTracking, javax.swing.GroupLayout.PREFERRED_SIZE, 255, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(76, Short.MAX_VALUE))
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(directoryButton, javax.swing.GroupLayout.PREFERRED_SIZE, 192, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(103, 103, 103))
-            .addComponent(folderDirectoryLabel, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(Update, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jScrollPane1)
                 .addContainerGap())
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addContainerGap(138, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addComponent(directoryButton, javax.swing.GroupLayout.PREFERRED_SIZE, 192, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(158, 158, 158))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addComponent(browseForPaymentTracking, javax.swing.GroupLayout.PREFERRED_SIZE, 255, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(130, 130, 130))))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -134,8 +150,10 @@ public class UpdaterGUI extends javax.swing.JFrame {
                     .addComponent(dateField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel1))
                 .addGap(18, 18, 18)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 143, Short.MAX_VALUE)
+                .addGap(18, 18, 18)
                 .addComponent(Update)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap())
         );
 
         pack();
@@ -161,7 +179,8 @@ public class UpdaterGUI extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this,"You must browse for both files","Error",JOptionPane.ERROR_MESSAGE);
             return;
         }
-        updateFiles(directoryFolder,date,students);
+        updateFiles(directoryFolder,date,students,textArea);
+        
     }//GEN-LAST:event_UpdateActionPerformed
 
     private void directoryButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_directoryButtonActionPerformed
@@ -172,7 +191,7 @@ public class UpdaterGUI extends javax.swing.JFrame {
         {
             File selectedFile = chooser.getSelectedFile();
             directoryFolder = selectedFile;
-            this.folderDirectoryLabel.setText(selectedFile.getAbsolutePath());
+            folderDirectoryLabel.setText(selectedFile.getAbsolutePath());
         }
     }//GEN-LAST:event_directoryButtonActionPerformed
 
@@ -183,7 +202,7 @@ public class UpdaterGUI extends javax.swing.JFrame {
         {
             File selectedFile = chooser.getSelectedFile();
             paymentTracking = selectedFile;
-            this.paymentTrackingLabel.setText(selectedFile.getAbsolutePath());
+            paymentTrackingLabel.setText(selectedFile.getAbsolutePath());
         }
     }//GEN-LAST:event_browseForPaymentTrackingActionPerformed
 
@@ -217,7 +236,8 @@ public class UpdaterGUI extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new UpdaterGUI().setVisible(true);
+                UpdaterGUI u = new UpdaterGUI();
+                u.setVisible(true);
             }
         });
     }
@@ -229,9 +249,11 @@ public class UpdaterGUI extends javax.swing.JFrame {
     private javax.swing.JButton directoryButton;
     private javax.swing.JLabel folderDirectoryLabel;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JLabel paymentTrackingLabel;
+    private javax.swing.JTextArea textArea;
     // End of variables declaration//GEN-END:variables
-    public static void updateFiles(File mainFolder, String date, HashMap<String,Student> students)
+    public static void updateFiles(File mainFolder, String date, HashMap<String,Student> students, JTextArea textArea)
     {
         ArrayList<String> problemStudents = new ArrayList<>();
         String month = getDueMonth(date);
@@ -248,12 +270,13 @@ public class UpdaterGUI extends javax.swing.JFrame {
                     problemStudents.add(arr[j].getName().substring(0,arr[j].getName().length()-4)); //adding name of file to problem students list, not including .xls extension 
                     continue;
                 }
-                System.out.println("Writing to file " + arr[j].getName() + "...");
                 int[] paymentInfo = getMonthsUnpaid(arr[j], student, date);
                 updateDate(arr[j],date,month);
                 updatePrice(arr[j],paymentInfo, student, date);
+                textArea.append("Wrote to file " + arr[j].getName() + "\n");
             }
         }
+        textArea.append("Done.");
         String problemStudentPrintout = "Following student(s) could not be updated because of name mismatch:\n";
         if(problemStudents.size()>0)
         {
